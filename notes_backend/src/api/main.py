@@ -21,13 +21,30 @@ app = FastAPI(
     openapi_tags=openapi_tags,
 )
 
-# CORS: allow frontend to call the API. In production, set allow_origins to your frontend URL(s).
+# CORS: allow frontend to call the API.
+#
+# IMPORTANT: Browsers disallow `Access-Control-Allow-Origin: *` when
+# `Access-Control-Allow-Credentials: true` is set. The runtime environment for
+# this project provides ALLOWED_ORIGINS/HEADERS/METHODS; we honor those here.
+import os
+
+
+def _split_csv(value: str | None) -> list[str]:
+    if not value:
+        return []
+    return [v.strip() for v in value.split(",") if v.strip()]
+
+
+allowed_origins = _split_csv(os.getenv("ALLOWED_ORIGINS")) or ["http://localhost:3000"]
+allowed_methods = _split_csv(os.getenv("ALLOWED_METHODS")) or ["*"]
+allowed_headers = _split_csv(os.getenv("ALLOWED_HEADERS")) or ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=allowed_methods,
+    allow_headers=allowed_headers,
 )
 
 
